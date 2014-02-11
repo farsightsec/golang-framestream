@@ -16,7 +16,6 @@
 
 package main
 
-import "io"
 import "log"
 import "fmt"
 import "os"
@@ -48,7 +47,7 @@ func main()  {
     fmt.Printf("Control frame [START] (%v bytes): %x\n", len(fs.ControlStart), fs.ControlStart)
     for {
         frame, err := fs.Decode()
-       if err == io.EOF {
+       if err == framestream.EOF {
             break
         }
         if err != nil {
