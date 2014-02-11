@@ -32,11 +32,11 @@ type Decoder struct {
     ContentType     []byte
     buf             []byte
     opt             DecoderOptions
-    rd              *bufio.Reader
+    reader          *bufio.Reader
     stopped         bool
 }
 
-func NewDecoder(rd io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
+func NewDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
     if opt == nil {
         opt = &DecoderOptions{}
     }
@@ -46,7 +46,7 @@ func NewDecoder(rd io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
     dec = &Decoder{
         buf:            make([]byte, opt.MaxPayloadSize),
         opt:            *opt,
-        rd:             bufio.NewReader(rd),
+        reader:         bufio.NewReader(r),
     }
 
     // Read the start control frame.
@@ -71,7 +71,7 @@ func NewDecoder(rd io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
 }
 
 func (dec *Decoder) readBE32() (val uint32, err error) {
-    err = binary.Read(dec.rd, binary.BigEndian, &val)
+    err = binary.Read(dec.reader, binary.BigEndian, &val)
     if err != nil {
         return 0, err
     }
@@ -108,7 +108,7 @@ func (dec *Decoder) readControlFrame() (controlFrameData []byte,
 
     // Read the control frame.
     controlFrameData = make([]byte, controlFrameLen)
-    n, err := io.ReadFull(dec.rd, controlFrameData)
+    n, err := io.ReadFull(dec.reader, controlFrameData)
     if err != nil || uint32(n) != controlFrameLen {
         return
     }
@@ -174,7 +174,7 @@ func (dec *Decoder) readFrame(frameLen uint32) (err error) {
     }
 
     // Read the frame.
-    n, err := io.ReadFull(dec.rd, dec.buf[0:frameLen])
+    n, err := io.ReadFull(dec.reader, dec.buf[0:frameLen])
     if err != nil || uint32(n) != frameLen {
         return
     }
