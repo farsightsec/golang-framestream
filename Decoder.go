@@ -19,17 +19,7 @@ package framestream
 import "bufio"
 import "bytes"
 import "encoding/binary"
-import "errors"
 import "io"
-
-const CONTROL_ACCEPT                = 0x01
-const CONTROL_START                 = 0x02
-const CONTROL_STOP                  = 0x03
-
-const CONTROL_FIELD_CONTENT_TYPE    = 0x01
-
-const DEFAULT_MAX_PAYLOAD_SIZE      = 1048576
-const MAX_CONTROL_FRAME_SIZE        = 512
 
 type DecoderOptions struct {
     MaxPayloadSize  uint32
@@ -45,11 +35,6 @@ type Decoder struct {
     rd              *bufio.Reader
     stopped         bool
 }
-
-var ErrContentTypeMismatch = errors.New("content type mismatch")
-var ErrDataFrameTooLarge = errors.New("data frame too large")
-var ErrShortRead = errors.New("short read")
-var ErrDecode = errors.New("decoding error")
 
 func NewDecoder(rd io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
     if opt == nil {
@@ -198,7 +183,7 @@ func (dec *Decoder) readFrame(frameLen uint32) (err error) {
 
 func (dec *Decoder) Decode() (frameData []byte, err error) {
     if dec.stopped {
-        err = io.EOF
+        err = EOF
         return
     }
 
@@ -214,7 +199,7 @@ func (dec *Decoder) Decode() (frameData []byte, err error) {
         if controlFrameType == CONTROL_STOP {
             dec.ControlStop = controlFrameData
             dec.stopped = true
-            return nil, io.EOF
+            return nil, EOF
         }
         if err != nil {
             return nil, err
