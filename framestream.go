@@ -22,6 +22,8 @@ import "errors"
 const CONTROL_ACCEPT                = 0x01
 const CONTROL_START                 = 0x02
 const CONTROL_STOP                  = 0x03
+const CONTROL_READY                 = 0x04
+const CONTROL_FINISH                = 0x05
 
 const CONTROL_FIELD_CONTENT_TYPE    = 0x01
 
@@ -33,3 +35,4 @@ var ErrContentTypeMismatch = errors.New("content type mismatch")
 var ErrDataFrameTooLarge = errors.New("data frame too large")
 var ErrShortRead = errors.New("short read")
 var ErrDecode = errors.New("decoding error")
+var ErrType = errors.New("invalid type")
