@@ -16,19 +16,21 @@
 
 package framestream
 
-import "io"
-import "errors"
+import (
+	"errors"
+	"io"
+)
 
-const CONTROL_ACCEPT                = 0x01
-const CONTROL_START                 = 0x02
-const CONTROL_STOP                  = 0x03
-const CONTROL_READY                 = 0x04
-const CONTROL_FINISH                = 0x05
+const CONTROL_ACCEPT = 0x01
+const CONTROL_START = 0x02
+const CONTROL_STOP = 0x03
+const CONTROL_READY = 0x04
+const CONTROL_FINISH = 0x05
 
-const CONTROL_FIELD_CONTENT_TYPE    = 0x01
+const CONTROL_FIELD_CONTENT_TYPE = 0x01
 
-const DEFAULT_MAX_PAYLOAD_SIZE      = 1048576
-const MAX_CONTROL_FRAME_SIZE        = 512
+const DEFAULT_MAX_PAYLOAD_SIZE = 1048576
+const MAX_CONTROL_FRAME_SIZE = 512
 
 var EOF = io.EOF
 var ErrContentTypeMismatch = errors.New("content type mismatch")

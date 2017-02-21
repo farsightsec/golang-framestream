@@ -16,46 +16,48 @@
 
 package main
 
-import "log"
-import "fmt"
-import "os"
+import (
+	"fmt"
+	"log"
+	"os"
 
-import framestream "github.com/farsightsec/golang-framestream"
+	"github.com/farsightsec/golang-framestream"
+)
 
-func main()  {
-    // Arguments.
-    if len(os.Args) != 2 {
-        fmt.Fprintf(os.Stderr, "Usage: %s <INPUT FILE>\n", os.Args[0])
-        fmt.Fprintf(os.Stderr, "Dumps a FrameStreams formatted input file.\n\n")
-        os.Exit(1)
-    }
-    fname := os.Args[1]
+func main() {
+	// Arguments.
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <INPUT FILE>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Dumps a FrameStreams formatted input file.\n\n")
+		os.Exit(1)
+	}
+	fname := os.Args[1]
 
-    // Open the input file.
-    file, err := os.Open(fname)
-    if err != nil {
-        log.Fatal(err)
-    }
+	// Open the input file.
+	file, err := os.Open(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    // Create the decoder.
-    fs, err := framestream.NewDecoder(file, nil)
-    if err != nil {
-        log.Fatal(err)
-    }
+	// Create the decoder.
+	fs, err := framestream.NewDecoder(file, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    // Print the frames.
-    fmt.Printf("Control frame [START] (%v bytes): %x\n", len(fs.ControlStart), fs.ControlStart)
-    for {
-        frame, err := fs.Decode()
-       if err == framestream.EOF {
-            break
-        }
-        if err != nil {
-            log.Fatal(err)
-        }
-        fmt.Printf("Data frame (%v bytes): %x\n", len(frame), frame)
-    }
-    if fs.ControlStop != nil {
-        fmt.Printf("Control frame [STOP] (%v bytes): %x\n", len(fs.ControlStop), fs.ControlStop)
-    }
+	// Print the frames.
+	fmt.Printf("Control frame [START] (%v bytes): %x\n", len(fs.ControlStart), fs.ControlStart)
+	for {
+		frame, err := fs.Decode()
+		if err == framestream.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Data frame (%v bytes): %x\n", len(frame), frame)
+	}
+	if fs.ControlStop != nil {
+		fmt.Printf("Control frame [STOP] (%v bytes): %x\n", len(fs.ControlStop), fs.ControlStop)
+	}
 }
