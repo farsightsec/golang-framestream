@@ -2,7 +2,6 @@ package framestream
 
 import (
 	"bytes"
-	"io"
 	"testing"
 )
 
@@ -30,8 +29,8 @@ func TestEncodeDecode(t *testing.T) {
 		return
 	}
 
-	want := []string{"frame one", "two", "3"}
-	for _, frame := range want {
+	wants := []string{"frame one", "two", "3"}
+	for _, frame := range wants {
 		_, err := enc.Write([]byte(frame))
 		if err != nil {
 			t.Fatalf("encode failed: %s\n", err)
@@ -41,22 +40,13 @@ func TestEncodeDecode(t *testing.T) {
 	enc.Flush()
 	enc.Close()
 
-	i := 0
-	for {
+	for i, want := range wants {
 		frame, err := dec.Decode()
 		if err != nil {
-			if err != io.EOF {
-				t.Errorf("decode failed: %s\n", err)
-			}
-			break
+			t.Errorf("decode failed: %s\n", err)
 		}
-		if i == len(want) {
-			t.Errorf("too much frames")
-			break
-		}
-		if string(frame) != want[i] {
+		if string(frame) != want {
 			t.Errorf("frame %d: wanted: %s, got: %s", i, want[i], string(frame))
 		}
-		i++
 	}
 }
