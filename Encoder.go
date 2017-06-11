@@ -54,7 +54,7 @@ func NewBidirectionalEncoder(rw io.ReadWriter, opt *EncoderOptions) (enc *Encode
 	}
 
 	// Check content type.
-	matched := MatchContentTypes(cf.ContentTypes, [][]byte{opt.ContentType})
+	matched := matchContentTypes(cf.ContentTypes, [][]byte{opt.ContentType})
 	if len(matched) != 1 {
 		return enc, ErrContentTypeMismatch
 	}

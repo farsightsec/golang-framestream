@@ -52,7 +52,7 @@ func NewBidirectionalDecoder(rw io.ReadWriter, opt *DecoderOptions) (dec *Decode
 	}
 
 	// Check content type.
-	matched := MatchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
+	matched := matchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
 	if len(matched) != 1 {
 		return dec, ErrContentTypeMismatch
 	}
@@ -97,7 +97,7 @@ func startDecoder(dec *Decoder) error {
 	}
 
 	// Check content type.
-	matched := MatchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
+	matched := matchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
 	if len(matched) != 1 {
 		return ErrContentTypeMismatch
 	}
@@ -105,7 +105,7 @@ func startDecoder(dec *Decoder) error {
 	return nil
 }
 
-func ReadBE32(r io.Reader) (val uint32, err error) {
+func readBE32(r io.Reader) (val uint32, err error) {
 	err = binary.Read(r, binary.BigEndian, &val)
 	if err != nil {
 		return 0, err
@@ -114,11 +114,11 @@ func ReadBE32(r io.Reader) (val uint32, err error) {
 }
 
 func (dec *Decoder) readBE32() (val uint32, err error) {
-	return ReadBE32(dec.reader)
+	return readBE32(dec.reader)
 }
 
 func readEscape(r io.Reader) error {
-	escape, err := ReadBE32(r)
+	escape, err := readBE32(r)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func readControlFrame(reader io.Reader) (cf *ControlFrame, err error) {
 	cf = new(ControlFrame)
 
 	// Read the control frame length.
-	controlFrameLen, err := ReadBE32(reader)
+	controlFrameLen, err := readBE32(reader)
 	if err != nil {
 		return
 	}
@@ -213,7 +213,7 @@ func readControlFrame(reader io.Reader) (cf *ControlFrame, err error) {
 	return
 }
 
-func MatchContentTypes(a [][]byte, b [][]byte) (c [][]byte) {
+func matchContentTypes(a [][]byte, b [][]byte) (c [][]byte) {
 	matched := make([][]byte, 0, 0)
 	for _, contentTypeA := range a {
 		for _, contentTypeB := range b {
