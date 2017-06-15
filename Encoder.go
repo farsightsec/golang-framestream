@@ -24,7 +24,8 @@ import (
 )
 
 type EncoderOptions struct {
-	ContentType []byte
+	ContentType   []byte
+	Bidirectional bool
 }
 
 type Encoder struct {
@@ -33,38 +34,38 @@ type Encoder struct {
 	buf    []byte
 }
 
-func NewBidirectionalEncoder(rw io.ReadWriter, opt *EncoderOptions) (enc *Encoder, err error) {
-	enc = newEncoder(rw, opt)
-
+func openBiEncoder(rw io.ReadWriter, opt *EncoderOptions) error {
 	// Write the ready control frame.
 	cf := &ControlFrame{ControlType: CONTROL_READY}
 	if opt.ContentType != nil {
 		cf.ContentTypes = [][]byte{opt.ContentType}
 	}
-	if err = writeControlFrameBuf(enc.writer, cf); err != nil {
-		err = errors.Wrap(err, "write the ready control frame")
-		return
+	if err := writeControlFrame(rw, cf); err != nil {
+		return errors.Wrap(err, "write control ready")
 	}
 
 	// Wait for the accept control frame.
-	cf, err = readControlFrameType(rw, CONTROL_ACCEPT)
+	cf, err := readControlFrameType(rw, CONTROL_ACCEPT)
 	if err != nil {
-		err = errors.Wrap(err, "wait accept control frame")
-		return
+		return errors.Wrap(err, "wait control accept")
 	}
 
 	// Check content type.
 	matched := matchContentTypes(cf.ContentTypes, [][]byte{opt.ContentType})
 	if len(matched) != 1 {
-		return enc, ErrContentTypeMismatch
+		return ErrContentTypeMismatch
 	}
 
-	return enc, startEncoder(enc)
+	return openEncoder(rw, opt)
 }
 
-// Write the start control frame.
-func startEncoder(enc *Encoder) error {
-	return errors.Wrap(enc.writeControlStart(),
+func openEncoder(w io.Writer, opt *EncoderOptions) error {
+	// Write the start control frame.
+	cf := ControlFrame{ControlType: CONTROL_START}
+	if opt.ContentType != nil {
+		cf.ContentTypes = [][]byte{opt.ContentType}
+	}
+	return errors.Wrap(writeControlFrame(w, &cf),
 		"write the start control frame")
 }
 func newEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder) {
@@ -79,24 +80,27 @@ func newEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder) {
 }
 
 func NewEncoder(w io.Writer, opt *EncoderOptions) (*Encoder, error) {
-	enc := newEncoder(w, opt)
-	return enc, startEncoder(enc)
-
+	if opt.Bidirectional {
+		r, ok := w.(io.Reader)
+		if !ok {
+			return nil, errors.New("need a io.Reader")
+		}
+		rw := struct {
+			io.Reader
+			io.Writer
+		}{r, w}
+		if err := openBiEncoder(rw, opt); err != nil {
+			return nil, errors.Wrap(err, "bidirectional")
+		}
+	} else {
+		if err := openEncoder(w, opt); err != nil {
+			return nil, errors.Wrap(err, "unidirectional")
+		}
+	}
+	return newEncoder(w, opt), nil
 }
 
 func (enc *Encoder) Close() error {
-	return enc.writeControlStop()
-}
-
-func (enc *Encoder) writeControlStart() (err error) {
-	cf := ControlFrame{ControlType: CONTROL_START}
-	if enc.opt.ContentType != nil {
-		cf.ContentTypes = [][]byte{enc.opt.ContentType}
-	}
-	return writeControlFrameBuf(enc.writer, &cf)
-}
-
-func (enc *Encoder) writeControlStop() (err error) {
 	cf := ControlFrame{ControlType: CONTROL_STOP}
 	return writeControlFrameBuf(enc.writer, &cf)
 }

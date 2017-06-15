@@ -27,6 +27,7 @@ import (
 type DecoderOptions struct {
 	MaxPayloadSize uint32
 	ContentType    []byte
+	Bidirectional  bool
 }
 
 type Decoder struct {
@@ -42,30 +43,28 @@ type ControlFrame struct {
 	ContentTypes [][]byte
 }
 
-func NewBidirectionalDecoder(rw io.ReadWriter, opt *DecoderOptions) (dec *Decoder, err error) {
-	dec = newDecoder(rw, opt)
+func openBiDecoder(rw io.ReadWriter, opt *DecoderOptions) error {
 
 	// Read the ready control frame.
-	cf, err := dec.readControlFrameType(CONTROL_READY)
+	cf, err := readControlFrameType(rw, CONTROL_READY)
 	if err != nil {
-		return
+		return errors.Wrap(err, "read control ready")
 	}
 
 	// Check content type.
-	matched := matchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
+	matched := matchContentTypes(cf.ContentTypes, [][]byte{opt.ContentType})
 	if len(matched) != 1 {
-		return dec, ErrContentTypeMismatch
+		return ErrContentTypeMismatch
 	}
 
 	// Send the accept control frame.
 	cf = &ControlFrame{ControlType: CONTROL_ACCEPT, ContentTypes: matched}
 	err = writeControlFrame(rw, cf)
 	if err != nil {
-		err = errors.Wrap(err, "send the accept control frame")
-		return
+		return errors.Wrap(err, "send control accept")
 	}
 
-	return dec, startDecoder(dec)
+	return openDecoder(rw, opt)
 }
 
 func newDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder) {
@@ -85,19 +84,35 @@ func newDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder) {
 }
 
 func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
-	dec := newDecoder(r, opt)
-	return dec, startDecoder(dec)
+	if opt.Bidirectional {
+		w, ok := r.(io.Writer)
+		if !ok {
+			return nil, errors.New("need a io.Writer")
+		}
+		rw := struct {
+			io.Reader
+			io.Writer
+		}{r, w}
+		if err := openBiDecoder(rw, opt); err != nil {
+			return nil, errors.Wrap(err, "bidirectional")
+		}
+	} else {
+		if err := openDecoder(r, opt); err != nil {
+			return nil, errors.Wrap(err, "unidirectional")
+		}
+	}
+	return newDecoder(r, opt), nil
 }
-func startDecoder(dec *Decoder) error {
+func openDecoder(r io.Reader, opt *DecoderOptions) error {
 
 	// Read the start control frame.
-	cf, err := dec.readControlFrameType(CONTROL_START)
+	cf, err := readControlFrameType(r, CONTROL_START)
 	if err != nil {
 		return errors.Wrap(err, "read control start")
 	}
 
 	// Check content type.
-	matched := matchContentTypes(cf.ContentTypes, [][]byte{dec.opt.ContentType})
+	matched := matchContentTypes(cf.ContentTypes, [][]byte{opt.ContentType})
 	if len(matched) != 1 {
 		return ErrContentTypeMismatch
 	}
@@ -111,10 +126,6 @@ func readBE32(r io.Reader) (val uint32, err error) {
 		return 0, err
 	}
 	return
-}
-
-func (dec *Decoder) readBE32() (val uint32, err error) {
-	return readBE32(dec.reader)
 }
 
 func readEscape(r io.Reader) error {
@@ -134,10 +145,6 @@ func (dec *Decoder) readEscape() (err error) {
 		dec.stopped = true
 	}
 	return
-}
-
-func (dec *Decoder) readControlFrame() (cf *ControlFrame, err error) {
-	return readControlFrame(dec.reader)
 }
 
 func readControlFrame(reader io.Reader) (cf *ControlFrame, err error) {
@@ -232,7 +239,11 @@ func writeControlFrameBuf(w *bufio.Writer, cf *ControlFrame) error {
 	return errors.Wrap(w.Flush(), "flush")
 }
 func writeControlFrame(writer io.Writer, cf *ControlFrame) (err error) {
+	// Escape: 32-bit BE integer. Zero: 4 bytes.
+	// Frame length: 32-bit BE integer: 4 bytes.
+	// Control type: 32-bit BE integer: 4 bytes.
 	totalLen := 4 * 3
+
 	for _, contentType := range cf.ContentTypes {
 		totalLen += 4 + 4 + len(contentType)
 	}
@@ -300,13 +311,6 @@ func readControlFrameType(r io.Reader, t uint32) (cf *ControlFrame, err error) {
 	}
 	return
 }
-func (dec *Decoder) readControlFrameType(t uint32) (cf *ControlFrame, err error) {
-	cf, err = readControlFrameType(dec.reader, t)
-	if err != nil {
-		dec.stopped = true
-	}
-	return
-}
 
 func (dec *Decoder) readFrame(frameLen uint32) (err error) {
 	// Enforce limits on frame size.
@@ -330,13 +334,13 @@ func (dec *Decoder) Decode() (frameData []byte, err error) {
 	}
 
 	// Read the frame length.
-	frameLen, err := dec.readBE32()
+	frameLen, err := readBE32(dec.reader)
 	if err != nil {
 		return
 	}
 	if frameLen == 0 {
 		// This is a control frame.
-		cf, err := dec.readControlFrame()
+		cf, err := readControlFrame(dec.reader)
 		if cf.ControlType == CONTROL_STOP {
 			dec.stopped = true
 			/* it has been commented in the C library so let's comment it

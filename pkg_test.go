@@ -42,7 +42,11 @@ func TestSocket(t *testing.T) {
 			return
 		}
 
-		dec, err := NewBidirectionalDecoder(server, &DecoderOptions{ContentType: FSContentType})
+		opt := &DecoderOptions{
+			ContentType:   FSContentType,
+			Bidirectional: true,
+		}
+		dec, err := NewDecoder(server, opt)
 		if err != nil {
 			t.Fatal(err)
 			return
@@ -60,7 +64,11 @@ func TestSocket(t *testing.T) {
 			return
 		}
 
-		enc, err = NewBidirectionalEncoder(client, &EncoderOptions{ContentType: FSContentType})
+		opt := &EncoderOptions{
+			ContentType:   FSContentType,
+			Bidirectional: true,
+		}
+		enc, err = NewEncoder(client, opt)
 		if err != nil {
 			t.Fatal(err)
 			return
