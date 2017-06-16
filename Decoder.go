@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"github.com/pkg/errors"
 	"io"
 )
 
@@ -48,7 +47,7 @@ func openBiDecoder(rw io.ReadWriter, opt *DecoderOptions) error {
 	// Read the ready control frame.
 	cf, err := readControlFrameType(rw, CONTROL_READY)
 	if err != nil {
-		return errors.Wrap(err, "read control ready")
+		return err
 	}
 
 	// Check content type.
@@ -61,7 +60,7 @@ func openBiDecoder(rw io.ReadWriter, opt *DecoderOptions) error {
 	cf = &ControlFrame{ControlType: CONTROL_ACCEPT, ContentTypes: matched}
 	err = writeControlFrame(rw, cf)
 	if err != nil {
-		return errors.Wrap(err, "send control accept")
+		return err
 	}
 
 	return openDecoder(rw, opt)
@@ -87,18 +86,18 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 	if opt.Bidirectional {
 		w, ok := r.(io.Writer)
 		if !ok {
-			return nil, errors.New("need a io.Writer")
+			return nil, ErrType
 		}
 		rw := struct {
 			io.Reader
 			io.Writer
 		}{r, w}
 		if err := openBiDecoder(rw, opt); err != nil {
-			return nil, errors.Wrap(err, "bidirectional")
+			return nil, err
 		}
 	} else {
 		if err := openDecoder(r, opt); err != nil {
-			return nil, errors.Wrap(err, "unidirectional")
+			return nil, err
 		}
 	}
 	return newDecoder(r, opt), nil
@@ -108,7 +107,7 @@ func openDecoder(r io.Reader, opt *DecoderOptions) error {
 	// Read the start control frame.
 	cf, err := readControlFrameType(r, CONTROL_START)
 	if err != nil {
-		return errors.Wrap(err, "read control start")
+		return err
 	}
 
 	// Check content type.
@@ -134,7 +133,7 @@ func readEscape(r io.Reader) error {
 		return err
 	}
 	if escape != 0 {
-		return errors.New("escape != 0")
+		return ErrDecode
 	}
 	return nil
 }
@@ -236,7 +235,7 @@ func writeControlFrameBuf(w *bufio.Writer, cf *ControlFrame) error {
 	if err := writeControlFrame(w, cf); err != nil {
 		return err
 	}
-	return errors.Wrap(w.Flush(), "flush")
+	return w.Flush()
 }
 func writeControlFrame(writer io.Writer, cf *ControlFrame) (err error) {
 	// Escape: 32-bit BE integer. Zero: 4 bytes.
@@ -307,7 +306,7 @@ func readControlFrameType(r io.Reader, t uint32) (cf *ControlFrame, err error) {
 		return
 	}
 	if cf.ControlType != t {
-		return cf, errors.Errorf("wrong control frame type, got: %d, want: %d", cf.ControlType, t)
+		return cf, ErrDecode
 	}
 	return
 }

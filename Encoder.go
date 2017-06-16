@@ -19,7 +19,7 @@ package framestream
 import (
 	"bufio"
 	"encoding/binary"
-	"github.com/pkg/errors"
+	"errors"
 	"io"
 )
 
@@ -41,13 +41,13 @@ func openBiEncoder(rw io.ReadWriter, opt *EncoderOptions) error {
 		cf.ContentTypes = [][]byte{opt.ContentType}
 	}
 	if err := writeControlFrame(rw, cf); err != nil {
-		return errors.Wrap(err, "write control ready")
+		return err
 	}
 
 	// Wait for the accept control frame.
 	cf, err := readControlFrameType(rw, CONTROL_ACCEPT)
 	if err != nil {
-		return errors.Wrap(err, "wait control accept")
+		return err
 	}
 
 	// Check content type.
@@ -65,8 +65,7 @@ func openEncoder(w io.Writer, opt *EncoderOptions) error {
 	if opt.ContentType != nil {
 		cf.ContentTypes = [][]byte{opt.ContentType}
 	}
-	return errors.Wrap(writeControlFrame(w, &cf),
-		"write the start control frame")
+	return writeControlFrame(w, &cf)
 }
 func newEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder) {
 	if opt == nil {
@@ -90,11 +89,11 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (*Encoder, error) {
 			io.Writer
 		}{r, w}
 		if err := openBiEncoder(rw, opt); err != nil {
-			return nil, errors.Wrap(err, "bidirectional")
+			return nil, err
 		}
 	} else {
 		if err := openEncoder(w, opt); err != nil {
-			return nil, errors.Wrap(err, "unidirectional")
+			return nil, err
 		}
 	}
 	return newEncoder(w, opt), nil
