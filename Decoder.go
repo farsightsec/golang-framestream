@@ -342,11 +342,10 @@ func (dec *Decoder) Decode() (frameData []byte, err error) {
 		cf, err := readControlFrame(dec.reader)
 		if cf.ControlType == CONTROL_STOP {
 			dec.stopped = true
-			/* it has been commented in the C library so let's comment it
 			if dec.opt.Bidirectional {
 				ff := &ControlFrame{ControlType: CONTROL_FINISH}
 				dec.sendControlFrame(ff)
-			}*/
+			}
 			return nil, EOF
 		}
 		if err != nil {
