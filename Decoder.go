@@ -33,7 +33,7 @@ type Decoder struct {
 	buf     []byte
 	opt     DecoderOptions
 	reader  *bufio.Reader
-	writer  *bufio.Writer
+	writer  io.Writer
 	stopped bool
 }
 
@@ -66,23 +66,14 @@ func openBiDecoder(rw io.ReadWriter, opt *DecoderOptions) error {
 	return openDecoder(rw, opt)
 }
 
-func newDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder) {
+func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 	if opt == nil {
 		opt = &DecoderOptions{}
 	}
 	if opt.MaxPayloadSize == 0 {
 		opt.MaxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE
 	}
-	dec = &Decoder{
-		buf:    make([]byte, opt.MaxPayloadSize),
-		opt:    *opt,
-		reader: bufio.NewReader(r),
-		writer: nil,
-	}
-	return
-}
-
-func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
+	dec := Decoder{}
 	if opt.Bidirectional {
 		w, ok := r.(io.Writer)
 		if !ok {
@@ -95,12 +86,16 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 		if err := openBiDecoder(rw, opt); err != nil {
 			return nil, err
 		}
+		dec.writer = w
 	} else {
 		if err := openDecoder(r, opt); err != nil {
 			return nil, err
 		}
 	}
-	return newDecoder(r, opt), nil
+	dec.buf = make([]byte, opt.MaxPayloadSize)
+	dec.opt = *opt
+	dec.reader = bufio.NewReader(r)
+	return &dec, nil
 }
 func openDecoder(r io.Reader, opt *DecoderOptions) error {
 
@@ -344,7 +339,7 @@ func (dec *Decoder) Decode() (frameData []byte, err error) {
 			dec.stopped = true
 			if dec.opt.Bidirectional {
 				ff := &ControlFrame{ControlType: CONTROL_FINISH}
-				dec.sendControlFrame(ff)
+				writeControlFrame(dec.writer, ff)
 			}
 			return nil, EOF
 		}
