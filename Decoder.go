@@ -36,11 +36,7 @@ type Decoder struct {
 	stopped bool
 }
 
-func NewDecoder(v interface{}, opt *DecoderOptions) (dec *Decoder, err error) {
-	r, ok := v.(io.Reader)
-	if !ok {
-		return dec, ErrType
-	}
+func NewDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
 	if opt == nil {
 		opt = &DecoderOptions{}
 	}
@@ -56,7 +52,7 @@ func NewDecoder(v interface{}, opt *DecoderOptions) (dec *Decoder, err error) {
 
 	var cf ControlFrame
 	if opt.Bidirectional {
-		w, ok := v.(io.Writer)
+		w, ok := r.(io.Writer)
 		if !ok {
 			return dec, ErrType
 		}
