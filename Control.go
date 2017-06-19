@@ -168,6 +168,9 @@ func (c *ControlFrame) MatchContentType(ctype []byte) bool {
 }
 
 func (c *ControlFrame) MatchContentType(ctype []byte) bool {
+	if ctype == nil {
+		return true
+	}
 	for _, cfctype := range c.ContentTypes {
 		if bytes.Compare(ctype, cfctype) == 0 {
 			return true
