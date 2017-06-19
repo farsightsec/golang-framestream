@@ -124,19 +124,6 @@ func (c *ControlFrame) DecodeEscape(r io.Reader) error {
 	return c.Decode(r)
 }
 
-func (c *ControlFrame) DecodeType(r io.Reader, ctype uint32) error {
-	err := c.Decode(r)
-	if err != nil {
-		return err
-	}
-
-	if ctype != c.ControlType {
-		return ErrDecode
-	}
-
-	return nil
-}
-
 func (c *ControlFrame) DecodeTypeEscape(r io.Reader, ctype uint32) error {
 	err := c.DecodeEscape(r)
 	if err != nil {
@@ -148,23 +135,6 @@ func (c *ControlFrame) DecodeTypeEscape(r io.Reader, ctype uint32) error {
 	}
 
 	return nil
-}
-
-func (c *ControlFrame) MatchContentTypes(ctypes [][]byte) (match [][]byte) {
-	for _, cfctype := range c.ContentTypes {
-		for _, ctype := range ctypes {
-			if bytes.Compare(ctype, cfctype) != 0 {
-				continue
-			}
-			match = append(match, ctype)
-		}
-}
-
-func (c *ControlFrame) MatchContentType(ctype []byte) bool {
-	if ctype == nil {
-		return true
-	}
-	return
 }
 
 func (c *ControlFrame) MatchContentType(ctype []byte) bool {
