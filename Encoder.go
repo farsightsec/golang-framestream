@@ -23,11 +23,13 @@ import (
 )
 
 type EncoderOptions struct {
-	ContentType []byte
+	ContentType   []byte
+	Bidirectional bool
 }
 
 type Encoder struct {
 	writer *bufio.Writer
+	reader *bufio.Reader
 	opt    EncoderOptions
 	buf    []byte
 }
@@ -41,6 +43,28 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 		opt:    *opt,
 	}
 
+	if opt.Bidirectional {
+		r, ok := w.(io.Reader)
+		if !ok {
+			return nil, ErrType
+		}
+		enc.reader = bufio.NewReader(r)
+		ready := ControlReady
+		ready.SetContentType(opt.ContentType)
+		if err = ready.EncodeFlush(enc.writer); err != nil {
+			return
+		}
+
+		var accept ControlFrame
+		if err = accept.DecodeTypeEscape(enc.reader, CONTROL_ACCEPT); err != nil {
+			return
+		}
+
+		if !accept.MatchContentType(opt.ContentType) {
+			return nil, ErrContentTypeMismatch
+		}
+	}
+
 	// Write the start control frame.
 	start := ControlStart
 	start.SetContentType(opt.ContentType)
@@ -52,8 +76,14 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	return
 }
 
-func (enc *Encoder) Close() error {
-	return ControlStop.EncodeFlush(enc.writer)
+func (enc *Encoder) Close() (err error) {
+	err = ControlStop.EncodeFlush(enc.writer)
+	if err != nil || !enc.opt.Bidirectional {
+		return
+	}
+
+	var finish ControlFrame
+	return finish.DecodeTypeEscape(enc.reader, CONTROL_FINISH)
 }
 
 func (enc *Encoder) Write(frame []byte) (n int, err error) {
