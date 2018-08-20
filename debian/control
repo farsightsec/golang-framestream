@@ -1,0 +1,16 @@
+Source: golang-github-farsightsec-go-framestream
+Section: unknown
+Priority: optional
+Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
+Build-Depends: debhelper (>= 9), dh-golang, golang-go
+Standards-Version: 3.9.8
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: https://anonscm.debian.org/collab-maint/golang-github-farsightsec-go-framestream.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/golang-github-farsightsec-go-framestream.git
+XS-Go-Import-Path: github.com/farsightsec/golang-framestream
+
+Package: golang-github-farsightsec-go-framestream-dev
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>

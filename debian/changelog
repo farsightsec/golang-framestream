@@ -1,0 +1,5 @@
+golang-github-farsightsec-go-framestream (0.0.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Mon, 20 Aug 2018 08:52:42 -0500
