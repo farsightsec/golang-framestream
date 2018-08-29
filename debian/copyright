@@ -1,5 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: golang-github-farsightsec-go-framestream
+Upstream-Name: golang-framestream
 Source: <url://example.com>
 
 Files: *
