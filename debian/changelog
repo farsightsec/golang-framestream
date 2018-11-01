@@ -1,3 +1,11 @@
+golang-framestream (0.1.0-1) debian-fsi; urgency=medium
+
+  * Miscellaneous debian packaging metadata cleanups.
+
+  * Add a README.md.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 01 Nov 2018 15:11:42 -0400
+
 golang-framestream (0.0.0-1) unstable; urgency=medium
 
   * Debian packaged release
