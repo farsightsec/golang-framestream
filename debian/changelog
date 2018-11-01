@@ -4,6 +4,8 @@ golang-framestream (0.1.0-1) debian-fsi; urgency=medium
 
   * Add a README.md.
 
+  * The framestream_dump tool is not installed in this "dev" package.
+
  -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 01 Nov 2018 15:11:42 -0400
 
 golang-framestream (0.0.0-1) unstable; urgency=medium

@@ -5,3 +5,6 @@
 
 %:
 	dh $@ --buildsystem=golang --with=golang
+
+override_dh_auto_install:
+	dh_auto_install -- --no-binaries
