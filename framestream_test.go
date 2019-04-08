@@ -135,7 +135,7 @@ func TestOversizeFrame(t *testing.T) {
 	}
 }
 
-func testNew(t *testing.T, bidirectional bool) {
+func testNew(t *testing.T, bidirectional bool, timeout time.Duration) {
 	client, server := net.Pipe()
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
@@ -148,6 +148,7 @@ func testNew(t *testing.T, bidirectional bool) {
 		_, err := framestream.NewDecoder(server,
 			&framestream.DecoderOptions{
 				Bidirectional: bidirectional,
+				Timeout:       timeout,
 			})
 
 		if err != nil {
@@ -160,6 +161,7 @@ func testNew(t *testing.T, bidirectional bool) {
 		_, err := framestream.NewEncoder(client,
 			&framestream.EncoderOptions{
 				Bidirectional: bidirectional,
+				Timeout:       timeout,
 			})
 		if err != nil {
 			t.Fatal(err)
@@ -180,9 +182,13 @@ func testNew(t *testing.T, bidirectional bool) {
 }
 
 func TestNewBidirectional(t *testing.T) {
-	testNew(t, true)
+	testNew(t, true, 0)
 }
 
 func TestNewUnidirectional(t *testing.T) {
-	testNew(t, false)
+	testNew(t, false, 0)
+}
+
+func TestNewBidirectionalTimeout(t *testing.T) {
+	testNew(t, true, time.Second)
 }
