@@ -106,7 +106,7 @@ func TestContentTypeMismatch(t *testing.T) {
 			ContentType: []byte("wrong"),
 		})
 	if err != framestream.ErrContentTypeMismatch {
-		t.Error("expected %v, received %v",
+		t.Errorf("expected %v, received %v",
 			framestream.ErrContentTypeMismatch,
 			err)
 	}
@@ -131,7 +131,7 @@ func TestOversizeFrame(t *testing.T) {
 	}
 	_, err = dec.Decode()
 	if err != framestream.ErrDataFrameTooLarge {
-		t.Error("data frame too large, received %v", err)
+		t.Errorf("data frame too large, received %v", err)
 	}
 }
 
