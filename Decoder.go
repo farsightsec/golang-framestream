@@ -20,12 +20,14 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"time"
 )
 
 type DecoderOptions struct {
 	MaxPayloadSize uint32
 	ContentType    []byte
 	Bidirectional  bool
+	Timeout        time.Duration
 }
 
 type Decoder struct {
@@ -43,6 +45,7 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
 	if opt.MaxPayloadSize == 0 {
 		opt.MaxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE
 	}
+	r = timeoutReader(r, opt)
 	dec = &Decoder{
 		buf:    make([]byte, opt.MaxPayloadSize),
 		opt:    *opt,
@@ -83,6 +86,9 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (dec *Decoder, err error) {
 	if err != nil {
 		return
 	}
+
+	// Disable the read timeout to prevent killing idle connections.
+	disableReadTimeout(r)
 
 	// Check content type.
 	if !cf.MatchContentType(dec.opt.ContentType) {
