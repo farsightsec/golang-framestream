@@ -141,6 +141,9 @@ func testNew(t *testing.T, bidirectional bool) {
 	wg.Add(2)
 	done := make(chan bool)
 
+	defer client.Close()
+	defer server.Close()
+
 	go func() {
 		_, err := framestream.NewDecoder(server,
 			&framestream.DecoderOptions{
