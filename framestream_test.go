@@ -106,7 +106,7 @@ func TestContentTypeMismatch(t *testing.T) {
 			ContentType: []byte("wrong"),
 		})
 	if err != framestream.ErrContentTypeMismatch {
-		t.Error("expected %v, received %v",
+		t.Errorf("expected %v, received %v",
 			framestream.ErrContentTypeMismatch,
 			err)
 	}
@@ -131,20 +131,24 @@ func TestOversizeFrame(t *testing.T) {
 	}
 	_, err = dec.Decode()
 	if err != framestream.ErrDataFrameTooLarge {
-		t.Error("data frame too large, received %v", err)
+		t.Errorf("data frame too large, received %v", err)
 	}
 }
 
-func testNew(t *testing.T, bidirectional bool) {
+func testNew(t *testing.T, bidirectional bool, timeout time.Duration) {
 	client, server := net.Pipe()
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	done := make(chan bool)
 
+	defer client.Close()
+	defer server.Close()
+
 	go func() {
 		_, err := framestream.NewDecoder(server,
 			&framestream.DecoderOptions{
 				Bidirectional: bidirectional,
+				Timeout:       timeout,
 			})
 
 		if err != nil {
@@ -157,6 +161,7 @@ func testNew(t *testing.T, bidirectional bool) {
 		_, err := framestream.NewEncoder(client,
 			&framestream.EncoderOptions{
 				Bidirectional: bidirectional,
+				Timeout:       timeout,
 			})
 		if err != nil {
 			t.Fatal(err)
@@ -177,9 +182,13 @@ func testNew(t *testing.T, bidirectional bool) {
 }
 
 func TestNewBidirectional(t *testing.T) {
-	testNew(t, true)
+	testNew(t, true, 0)
 }
 
 func TestNewUnidirectional(t *testing.T) {
-	testNew(t, false)
+	testNew(t, false, 0)
+}
+
+func TestNewBidirectionalTimeout(t *testing.T) {
+	testNew(t, true, time.Second)
 }

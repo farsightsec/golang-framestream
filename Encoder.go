@@ -20,11 +20,13 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"time"
 )
 
 type EncoderOptions struct {
 	ContentType   []byte
 	Bidirectional bool
+	Timeout       time.Duration
 }
 
 type Encoder struct {
@@ -38,6 +40,7 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	if opt == nil {
 		opt = &EncoderOptions{}
 	}
+	w = timeoutWriter(w, opt)
 	enc = &Encoder{
 		writer: bufio.NewWriter(w),
 		opt:    *opt,
