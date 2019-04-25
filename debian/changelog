@@ -1,3 +1,9 @@
+golang-framestream (0.2.0-1) debian-fsi; urgency=medium
+
+  * Add I/O timeout for Encoders and Decoders.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 25 Apr 2019 15:41:46 -0400
+
 golang-framestream (0.1.0-1) debian-fsi; urgency=medium
 
   * Miscellaneous debian packaging metadata cleanups.
