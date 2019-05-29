@@ -17,8 +17,6 @@
 package framestream
 
 import (
-	"bufio"
-	"encoding/binary"
 	"io"
 	"time"
 )
@@ -30,73 +28,22 @@ type EncoderOptions struct {
 }
 
 type Encoder struct {
-	writer *bufio.Writer
-	reader *bufio.Reader
-	opt    EncoderOptions
-	buf    []byte
+	*Writer
 }
 
 func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	if opt == nil {
 		opt = &EncoderOptions{}
 	}
-	w = timeoutWriter(w, opt)
-	enc = &Encoder{
-		writer: bufio.NewWriter(w),
-		opt:    *opt,
-	}
+	writer, err := NewWriter(w,
+		&WriterOptions{
+			ContentType:   opt.ContentType,
+			Bidirectional: opt.Bidirectional,
+			Timeout:       opt.Timeout,
+		})
 
-	if opt.Bidirectional {
-		r, ok := w.(io.Reader)
-		if !ok {
-			return nil, ErrType
-		}
-		enc.reader = bufio.NewReader(r)
-		ready := ControlReady
-		ready.SetContentType(opt.ContentType)
-		if err = ready.EncodeFlush(enc.writer); err != nil {
-			return
-		}
-
-		var accept ControlFrame
-		if err = accept.DecodeTypeEscape(enc.reader, CONTROL_ACCEPT); err != nil {
-			return
-		}
-
-		if !accept.MatchContentType(opt.ContentType) {
-			return nil, ErrContentTypeMismatch
-		}
-	}
-
-	// Write the start control frame.
-	start := ControlStart
-	start.SetContentType(opt.ContentType)
-	err = start.EncodeFlush(enc.writer)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	return
-}
-
-func (enc *Encoder) Close() (err error) {
-	err = ControlStop.EncodeFlush(enc.writer)
-	if err != nil || !enc.opt.Bidirectional {
-		return
-	}
-
-	var finish ControlFrame
-	return finish.DecodeTypeEscape(enc.reader, CONTROL_FINISH)
-}
-
-func (enc *Encoder) Write(frame []byte) (n int, err error) {
-	err = binary.Write(enc.writer, binary.BigEndian, uint32(len(frame)))
-	if err != nil {
-		return
-	}
-	return enc.writer.Write(frame)
-}
-
-func (enc *Encoder) Flush() error {
-	return enc.writer.Flush()
+	return &Encoder{Writer: writer}, nil
 }
