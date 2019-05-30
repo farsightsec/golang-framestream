@@ -137,20 +137,42 @@ func (c *ControlFrame) DecodeTypeEscape(r io.Reader, ctype uint32) error {
 	return nil
 }
 
-func (c *ControlFrame) MatchContentType(ctype []byte) bool {
-	if ctype == nil {
-		return true
+// ChooseContentType selects a content type from the ControlFrame which
+// also exists in the supplied ctypes. Preference is given to values occurring
+// earliest in ctypes.
+//
+// ChooseContentType returns the chosen content type, which may be nil, and
+// a bool value indicating whether a matching type was found.
+//
+// If either the ControlFrame types or ctypes is empty, ChooseContentType
+// returns nil as a matching content type.
+func (c *ControlFrame) ChooseContentType(ctypes [][]byte) (typ []byte, found bool) {
+	if c.ContentTypes == nil || ctypes == nil {
+		return nil, true
 	}
+	tm := make(map[string]bool)
 	for _, cfctype := range c.ContentTypes {
-		if bytes.Compare(ctype, cfctype) == 0 {
-			return true
+		tm[string(cfctype)] = true
+	}
+	for _, ctype := range ctypes {
+		if tm[string(ctype)] {
+			return ctype, true
 		}
 	}
-	return false
+	return nil, false
+}
+
+func (c *ControlFrame) MatchContentType(ctype []byte) bool {
+	_, ok := c.ChooseContentType([][]byte{ctype})
+	return ok
+}
+
+func (c *ControlFrame) SetContentTypes(ctypes [][]byte) {
+	c.ContentTypes = ctypes
 }
 
 func (c *ControlFrame) SetContentType(ctype []byte) {
 	if ctype != nil {
-		c.ContentTypes = [][]byte{ctype}
+		c.SetContentTypes([][]byte{ctype})
 	}
 }
