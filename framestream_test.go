@@ -2,6 +2,7 @@ package framestream_test
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"sync"
 	"testing"
@@ -152,7 +153,7 @@ func testNew(t *testing.T, bidirectional bool, timeout time.Duration) {
 			})
 
 		if err != nil {
-			t.Fatal(err)
+			t.Log("decoder error: ", err)
 		}
 		wg.Done()
 	}()
@@ -164,7 +165,7 @@ func testNew(t *testing.T, bidirectional bool, timeout time.Duration) {
 				Timeout:       timeout,
 			})
 		if err != nil {
-			t.Fatal(err)
+			t.Log("encoder error: ", err)
 		}
 		wg.Done()
 	}()
@@ -191,4 +192,81 @@ func TestNewUnidirectional(t *testing.T) {
 
 func TestNewBidirectionalTimeout(t *testing.T) {
 	testNew(t, true, time.Second)
+}
+
+func testNegotiate(t *testing.T, rtypes, wtypes [][]byte, expected []byte, ok bool) {
+	wc, rc := net.Pipe()
+	done := make(chan error)
+	defer wc.Close()
+	defer rc.Close()
+	go func() {
+		w, err := framestream.NewWriter(wc, &framestream.WriterOptions{
+			Bidirectional: true,
+			ContentTypes:  wtypes,
+		})
+		defer close(done)
+		if err != nil {
+			done <- err
+			wc.Close()
+			return
+		}
+		if bytes.Compare(expected, w.ContentType()) != 0 {
+			done <- fmt.Errorf("writer content type %s != %s",
+				w.ContentType(), expected)
+		}
+	}()
+
+	r, err := framestream.NewReader(rc, &framestream.ReaderOptions{
+		Bidirectional: true,
+		ContentTypes:  rtypes,
+	})
+	if err != nil {
+		if ok {
+			t.Errorf("NewReader error: %v", err)
+		}
+		rc.Close()
+	} else {
+		if !ok {
+			t.Errorf("NewReader did not fail as expected")
+		}
+		if bytes.Compare(expected, r.ContentType()) != 0 {
+			t.Errorf("reader content type %s != %s",
+				r.ContentType(), expected)
+		}
+	}
+	err = <-done
+	if ok && err != nil {
+		t.Errorf("Writer error: %v", err)
+	}
+	if !ok && err == nil {
+		t.Errorf("Writer did not fail as expected")
+	}
+}
+
+func contentTypes(types ...string) [][]byte {
+	b := make([][]byte, 0)
+	for _, t := range types {
+		b = append(b, []byte(t))
+	}
+	return b
+}
+
+func TestContentTypes(t *testing.T) {
+	t.Log("reader: nil, writer: nil, expect: nil")
+	testNegotiate(t, nil, nil, nil, true)
+	t.Log("reader: type1, writer: type1, expect: type1")
+	testNegotiate(t,
+		contentTypes("type1"),
+		contentTypes("type1"),
+		[]byte("type1"), true)
+	t.Log("reader: type1, writer: type2, expect: error")
+	testNegotiate(t,
+		contentTypes("type1"),
+		contentTypes("type2"),
+		nil, false)
+	t.Log("reader: type1, type2, type3, writer: type4, type3, type2, expect: type2")
+	testNegotiate(t,
+		contentTypes("type1", "type2", "type3"),
+		contentTypes("type4", "type3", "type2"),
+		[]byte("type2"), true)
 }

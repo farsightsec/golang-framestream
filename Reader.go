@@ -21,11 +21,12 @@ import (
 	"encoding/binary"
 	"io"
 	"io/ioutil"
+	"log"
 	"time"
 )
 
 type ReaderOptions struct {
-	ContentType   []byte
+	ContentTypes  [][]byte
 	Bidirectional bool
 	Timeout       time.Duration
 }
@@ -49,6 +50,10 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 		w:             nil,
 	}
 
+	if opt.ContentTypes != nil {
+		reader.contentType = opt.ContentTypes[0]
+	}
+
 	var cf ControlFrame
 	if opt.Bidirectional {
 		w, ok := tr.(io.Writer)
@@ -60,17 +65,20 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 		// Read the ready control frame.
 		err := cf.DecodeTypeEscape(reader.r, CONTROL_READY)
 		if err != nil {
+			log.Println("DecodeTypeEscape: ", err)
 			return nil, err
 		}
 
 		// Check content type.
-		if !cf.MatchContentType(opt.ContentType) {
+		if t, ok := cf.ChooseContentType(opt.ContentTypes); ok {
+			reader.contentType = t
+		} else {
 			return nil, ErrContentTypeMismatch
 		}
 
 		// Send the accept control frame.
 		accept := ControlAccept
-		accept.SetContentType(opt.ContentType)
+		accept.SetContentType(reader.contentType)
 		err = accept.EncodeFlush(reader.w)
 		if err != nil {
 			return nil, err
@@ -87,7 +95,7 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 	disableReadTimeout(tr)
 
 	// Check content type.
-	if !cf.MatchContentType(opt.ContentType) {
+	if !cf.MatchContentType(reader.contentType) {
 		return nil, ErrContentTypeMismatch
 	}
 
@@ -107,6 +115,10 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	}
 
 	return
+}
+
+func (r *Reader) ContentType() []byte {
+	return r.contentType
 }
 
 func (r *Reader) readFrame(b []byte) (int, error) {

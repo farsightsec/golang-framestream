@@ -24,26 +24,31 @@ import (
 )
 
 type WriterOptions struct {
-	ContentType   []byte
+	ContentTypes  [][]byte
 	Bidirectional bool
 	Timeout       time.Duration
 }
 
 type Writer struct {
-	writer *bufio.Writer
-	reader *bufio.Reader
-	opt    WriterOptions
-	buf    []byte
+	contentType []byte
+	w           *bufio.Writer
+	r           *bufio.Reader
+	opt         WriterOptions
+	buf         []byte
 }
 
-func NewWriter(w io.Writer, opt *WriterOptions) (wr *Writer, err error) {
+func NewWriter(w io.Writer, opt *WriterOptions) (writer *Writer, err error) {
 	if opt == nil {
 		opt = &WriterOptions{}
 	}
 	w = timeoutWriter(w, opt)
-	wr = &Writer{
-		writer: bufio.NewWriter(w),
-		opt:    *opt,
+	writer = &Writer{
+		w:   bufio.NewWriter(w),
+		opt: *opt,
+	}
+
+	if opt.ContentTypes != nil {
+		writer.contentType = opt.ContentTypes[0]
 	}
 
 	if opt.Bidirectional {
@@ -51,27 +56,29 @@ func NewWriter(w io.Writer, opt *WriterOptions) (wr *Writer, err error) {
 		if !ok {
 			return nil, ErrType
 		}
-		wr.reader = bufio.NewReader(r)
+		writer.r = bufio.NewReader(r)
 		ready := ControlReady
-		ready.SetContentType(opt.ContentType)
-		if err = ready.EncodeFlush(wr.writer); err != nil {
+		ready.SetContentTypes(opt.ContentTypes)
+		if err = ready.EncodeFlush(writer.w); err != nil {
 			return
 		}
 
 		var accept ControlFrame
-		if err = accept.DecodeTypeEscape(wr.reader, CONTROL_ACCEPT); err != nil {
+		if err = accept.DecodeTypeEscape(writer.r, CONTROL_ACCEPT); err != nil {
 			return
 		}
 
-		if !accept.MatchContentType(opt.ContentType) {
+		if t, ok := accept.ChooseContentType(opt.ContentTypes); ok {
+			writer.contentType = t
+		} else {
 			return nil, ErrContentTypeMismatch
 		}
 	}
 
 	// Write the start control frame.
 	start := ControlStart
-	start.SetContentType(opt.ContentType)
-	err = start.EncodeFlush(wr.writer)
+	start.SetContentType(writer.contentType)
+	err = start.EncodeFlush(writer.w)
 	if err != nil {
 		return
 	}
@@ -79,24 +86,28 @@ func NewWriter(w io.Writer, opt *WriterOptions) (wr *Writer, err error) {
 	return
 }
 
-func (wr *Writer) Close() (err error) {
-	err = ControlStop.EncodeFlush(wr.writer)
-	if err != nil || !wr.opt.Bidirectional {
+func (w *Writer) ContentType() []byte {
+	return w.contentType
+}
+
+func (w *Writer) Close() (err error) {
+	err = ControlStop.EncodeFlush(w.w)
+	if err != nil || !w.opt.Bidirectional {
 		return
 	}
 
 	var finish ControlFrame
-	return finish.DecodeTypeEscape(wr.reader, CONTROL_FINISH)
+	return finish.DecodeTypeEscape(w.r, CONTROL_FINISH)
 }
 
-func (wr *Writer) Write(frame []byte) (n int, err error) {
-	err = binary.Write(wr.writer, binary.BigEndian, uint32(len(frame)))
+func (w *Writer) Write(frame []byte) (n int, err error) {
+	err = binary.Write(w.w, binary.BigEndian, uint32(len(frame)))
 	if err != nil {
 		return
 	}
-	return wr.writer.Write(frame)
+	return w.w.Write(frame)
 }
 
-func (wr *Writer) Flush() error {
-	return wr.writer.Flush()
+func (w *Writer) Flush() error {
+	return w.w.Flush()
 }

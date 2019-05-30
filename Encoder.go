@@ -35,13 +35,14 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	if opt == nil {
 		opt = &EncoderOptions{}
 	}
-	writer, err := NewWriter(w,
-		&WriterOptions{
-			ContentType:   opt.ContentType,
-			Bidirectional: opt.Bidirectional,
-			Timeout:       opt.Timeout,
-		})
-
+	wopt := &WriterOptions{
+		Bidirectional: opt.Bidirectional,
+		Timeout:       opt.Timeout,
+	}
+	if opt.ContentType != nil {
+		wopt.ContentTypes = append(wopt.ContentTypes, opt.ContentType)
+	}
+	writer, err := NewWriter(w, wopt)
 	if err != nil {
 		return nil, err
 	}

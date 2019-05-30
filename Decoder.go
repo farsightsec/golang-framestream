@@ -40,11 +40,14 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 	if opt.MaxPayloadSize == 0 {
 		opt.MaxPayloadSize = DEFAULT_MAX_PAYLOAD_SIZE
 	}
-	dr, err := NewReader(r, &ReaderOptions{
+	ropt := &ReaderOptions{
 		Bidirectional: opt.Bidirectional,
-		ContentType:   opt.ContentType,
 		Timeout:       opt.Timeout,
-	})
+	}
+	if opt.ContentType != nil {
+		ropt.ContentTypes = append(ropt.ContentTypes, opt.ContentType)
+	}
+	dr, err := NewReader(r, ropt)
 	if err != nil {
 		return nil, err
 	}
