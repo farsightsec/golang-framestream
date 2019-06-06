@@ -24,11 +24,23 @@ import (
 )
 
 type WriterOptions struct {
-	ContentTypes  [][]byte
+	// The ContentTypes available to be written to the Writer. May be
+	// left unset for no content negotiation. If the Reader requests a
+	// disjoint set of content types, NewEncoder() will return
+	// ErrContentTypeMismatch.
+	ContentTypes [][]byte
+	// If Bidirectional is true, the underlying io.Writer must be an
+	// io.ReadWriter, and the Writer will engage in a bidirectional
+	// handshake with its peer to establish content type and communicate
+	// shutdown.
 	Bidirectional bool
-	Timeout       time.Duration
+	// Timeout gives the timeout for writing both control and data frames,
+	// and for reading responses to control frames sent. It is only
+	//  effective for underlying Writers satisfying net.Conn.
+	Timeout time.Duration
 }
 
+// A Writer writes data frames to a Frame Streams file or connection.
 type Writer struct {
 	contentType []byte
 	w           *bufio.Writer
@@ -37,6 +49,7 @@ type Writer struct {
 	buf         []byte
 }
 
+// NewWriter returns a Frame Streams Writer using the given io.Writer and options.
 func NewWriter(w io.Writer, opt *WriterOptions) (writer *Writer, err error) {
 	if opt == nil {
 		opt = &WriterOptions{}
@@ -86,10 +99,14 @@ func NewWriter(w io.Writer, opt *WriterOptions) (writer *Writer, err error) {
 	return
 }
 
+// ContentType returns the content type negotiated with Reader.
 func (w *Writer) ContentType() []byte {
 	return w.contentType
 }
 
+// Close shuts down the Frame Streams stream by writing a CONTROL_STOP message.
+// If the Writer is Bidirectional, Close will wait for an acknowledgement
+// (CONTROL_FINISH) from its peer.
 func (w *Writer) Close() (err error) {
 	err = ControlStop.EncodeFlush(w.w)
 	if err != nil || !w.opt.Bidirectional {
@@ -100,6 +117,8 @@ func (w *Writer) Close() (err error) {
 	return finish.DecodeTypeEscape(w.r, CONTROL_FINISH)
 }
 
+// Write writes the given frame to the underlying io.Writer with Frame Streams
+// framing.
 func (w *Writer) Write(frame []byte) (n int, err error) {
 	err = binary.Write(w.w, binary.BigEndian, uint32(len(frame)))
 	if err != nil {
@@ -108,6 +127,8 @@ func (w *Writer) Write(frame []byte) (n int, err error) {
 	return w.w.Write(frame)
 }
 
+// Flush ensures that any buffered data frames are written to the underlying
+// io.Writer.
 func (w *Writer) Flush() error {
 	return w.w.Flush()
 }
