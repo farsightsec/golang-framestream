@@ -21,18 +21,39 @@ import (
 	"time"
 )
 
+// DecoderOptions specifies configuration for a framestream Decoder.
 type DecoderOptions struct {
+	// MaxPayloadSize is the largest frame size accepted by the Decoder.
+	//
+	// If the Frame Streams Writer sends a frame in excess of this size,
+	// Decode() will return the error ErrDataFrameTooLarge. The Decoder
+	// attempts to recover from this error, so calls to Decode() after
+	// receiving this error may succeed.
 	MaxPayloadSize uint32
-	ContentType    []byte
-	Bidirectional  bool
-	Timeout        time.Duration
+	// The ContentType expected by the Decoder. May be left unset for no
+	// content negotiation. If the Writer requests a different content type,
+	// NewDecoder() will return ErrContentTypeMismatch.
+	ContentType []byte
+	// If Bidirectional is true, the underlying io.Reader must be an
+	// io.ReadWriter, and the Decoder will engage in a bidirectional
+	// handshake with its peer to establish content type and communicate
+	// shutdown.
+	Bidirectional bool
+	// Timeout gives the timeout for reading the initial handshake messages
+	// from the peer and writing response messages if Bidirectional. It is
+	// only effective for underlying Readers satisfying net.Conn.
+	Timeout time.Duration
 }
 
+// A Decoder decodes Frame Streams frames read from an underlying io.Reader.
+//
+// It is provided for compatibility. Use Reader instead.
 type Decoder struct {
 	buf []byte
 	r   *Reader
 }
 
+// NewDecoder returns a Decoder using the given io.Reader and options.
 func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 	if opt == nil {
 		opt = &DecoderOptions{}
@@ -58,6 +79,8 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 	return dec, nil
 }
 
+// Decode returns the data from a Frame Streams data frame. The slice returned
+// is valid until the next call to Decode.
 func (dec *Decoder) Decode() (frameData []byte, err error) {
 	n, err := dec.r.Read(dec.buf)
 	if err != nil {

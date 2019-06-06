@@ -21,16 +21,32 @@ import (
 	"time"
 )
 
+// EncoderOptions specifies configuration for an Encoder
 type EncoderOptions struct {
-	ContentType   []byte
+	// The ContentType of the data sent by the Encoder. May be left unset
+	// for no content negotiation. If the Reader requests a different
+	// content type, NewEncoder() will return ErrContentTypeMismatch.
+	ContentType []byte
+	// If Bidirectional is true, the underlying io.Writer must be an
+	// io.ReadWriter, and the Encoder will engage in a bidirectional
+	// handshake with its peer to establish content type and communicate
+	// shutdown.
 	Bidirectional bool
-	Timeout       time.Duration
+	// Timeout gives the timeout for writing both control and data frames,
+	// and for reading responses to control frames sent. It is only
+	//  effective for underlying Writers satisfying net.Conn.
+	Timeout time.Duration
 }
 
+// An Encoder sends data frames over a FrameStream Writer.
+//
+// Encoder is provided for compatibility, use Writer instead.
 type Encoder struct {
 	*Writer
 }
 
+// NewEncoder creates an Encoder writing to the given io.Writer with the given
+// EncoderOptions.
 func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	if opt == nil {
 		opt = &EncoderOptions{}
