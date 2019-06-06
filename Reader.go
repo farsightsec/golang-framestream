@@ -26,11 +26,23 @@ import (
 )
 
 type ReaderOptions struct {
-	ContentTypes  [][]byte
+	// The ContentTypes accepted by the Reader. May be left unset for no
+	// content negotiation. If the corresponding Writer offers a disjoint
+	// set of ContentTypes, NewReader() will return ErrContentTypeMismatch.
+	ContentTypes [][]byte
+	// If Bidirectional is true, the underlying io.Reader must be an
+	// io.ReadWriter, and the Reader will engage in a bidirectional
+	// handshake with its peer to establish content type and communicate
+	// shutdown.
 	Bidirectional bool
-	Timeout       time.Duration
+	// Timeout gives the timeout for reading the initial handshake messages
+	// from the peer and writing response messages if Bidirectional. It is
+	// only effective for underlying Readers satisfying net.Conn.
+	Timeout time.Duration
 }
 
+// Reader reads data frames from an underlying io.Reader using the Frame
+// Streams framing protocol.
 type Reader struct {
 	contentType   []byte
 	bidirectional bool
@@ -39,6 +51,8 @@ type Reader struct {
 	stopped       bool
 }
 
+// NewReader creates a Frame Streams Reader reading from the given io.Reader
+// with the given ReaderOptions.
 func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 	if opt == nil {
 		opt = &ReaderOptions{}
@@ -102,13 +116,17 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) Read(b []byte) (n int, err error) {
+// Read reads a data frame into the supplied buffer, returning its length.
+// If the frame is longer than the supplied buffer, Read returns
+// ErrDataFrameTooLarge and discards the frame. Subsequent calls to Read()
+// after this error may succeed.
+func (r *Reader) Read(b []byte) (length int, err error) {
 	if r.stopped {
 		return 0, EOF
 	}
 
-	for n == 0 {
-		n, err = r.readFrame(b)
+	for length == 0 {
+		length, err = r.readFrame(b)
 		if err != nil {
 			return
 		}
@@ -117,6 +135,7 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 	return
 }
 
+// ContentType returns the content type negotiated with the Writer.
 func (r *Reader) ContentType() []byte {
 	return r.contentType
 }
