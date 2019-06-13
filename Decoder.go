@@ -82,7 +82,7 @@ func NewDecoder(r io.Reader, opt *DecoderOptions) (*Decoder, error) {
 // Decode returns the data from a Frame Streams data frame. The slice returned
 // is valid until the next call to Decode.
 func (dec *Decoder) Decode() (frameData []byte, err error) {
-	n, err := dec.r.Read(dec.buf)
+	n, err := dec.r.ReadFrame(dec.buf)
 	if err != nil {
 		return nil, err
 	}
