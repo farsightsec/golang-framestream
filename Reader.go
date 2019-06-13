@@ -116,11 +116,11 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 	return reader, nil
 }
 
-// Read reads a data frame into the supplied buffer, returning its length.
+// ReadFrame reads a data frame into the supplied buffer, returning its length.
 // If the frame is longer than the supplied buffer, Read returns
 // ErrDataFrameTooLarge and discards the frame. Subsequent calls to Read()
 // after this error may succeed.
-func (r *Reader) Read(b []byte) (length int, err error) {
+func (r *Reader) ReadFrame(b []byte) (length int, err error) {
 	if r.stopped {
 		return 0, EOF
 	}
