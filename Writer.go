@@ -117,9 +117,9 @@ func (w *Writer) Close() (err error) {
 	return finish.DecodeTypeEscape(w.r, CONTROL_FINISH)
 }
 
-// Write writes the given frame to the underlying io.Writer with Frame Streams
+// WriteFrame writes the given frame to the underlying io.Writer with Frame Streams
 // framing.
-func (w *Writer) Write(frame []byte) (n int, err error) {
+func (w *Writer) WriteFrame(frame []byte) (n int, err error) {
 	err = binary.Write(w.w, binary.BigEndian, uint32(len(frame)))
 	if err != nil {
 		return

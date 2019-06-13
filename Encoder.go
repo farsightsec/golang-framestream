@@ -64,3 +64,7 @@ func NewEncoder(w io.Writer, opt *EncoderOptions) (enc *Encoder, err error) {
 	}
 	return &Encoder{Writer: writer}, nil
 }
+
+func (e *Encoder) Write(frame []byte) (int, error) {
+	return e.WriteFrame(frame)
+}
