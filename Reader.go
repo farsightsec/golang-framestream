@@ -64,7 +64,7 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 		w:             nil,
 	}
 
-	if opt.ContentTypes != nil {
+	if len(opt.ContentTypes) > 0 {
 		reader.contentType = opt.ContentTypes[0]
 	}
 
