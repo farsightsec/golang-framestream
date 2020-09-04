@@ -178,5 +178,7 @@ func (c *ControlFrame) SetContentTypes(ctypes [][]byte) {
 func (c *ControlFrame) SetContentType(ctype []byte) {
 	if ctype != nil {
 		c.SetContentTypes([][]byte{ctype})
+	} else {
+		c.ContentTypes = nil
 	}
 }
