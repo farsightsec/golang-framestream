@@ -21,7 +21,6 @@ import (
 	"encoding/binary"
 	"io"
 	"io/ioutil"
-	"log"
 	"time"
 )
 
@@ -79,7 +78,6 @@ func NewReader(r io.Reader, opt *ReaderOptions) (*Reader, error) {
 		// Read the ready control frame.
 		err := cf.DecodeTypeEscape(reader.r, CONTROL_READY)
 		if err != nil {
-			log.Println("DecodeTypeEscape: ", err)
 			return nil, err
 		}
 
