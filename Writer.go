@@ -60,7 +60,7 @@ func NewWriter(w io.Writer, opt *WriterOptions) (writer *Writer, err error) {
 		opt: *opt,
 	}
 
-	if opt.ContentTypes != nil {
+	if len(opt.ContentTypes) > 0 {
 		writer.contentType = opt.ContentTypes[0]
 	}
 
