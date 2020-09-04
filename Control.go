@@ -163,8 +163,12 @@ func (c *ControlFrame) ChooseContentType(ctypes [][]byte) (typ []byte, found boo
 }
 
 func (c *ControlFrame) MatchContentType(ctype []byte) bool {
-	_, ok := c.ChooseContentType([][]byte{ctype})
-	return ok
+	for _, cfctype := range c.ContentTypes {
+		if bytes.Compare(ctype, cfctype) == 0 {
+			return true
+		}
+	}
+	return len(c.ContentTypes) == 0
 }
 
 func (c *ControlFrame) SetContentTypes(ctypes [][]byte) {
