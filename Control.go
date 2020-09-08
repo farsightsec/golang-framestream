@@ -15,6 +15,8 @@ const CONTROL_FINISH = 0x05
 
 const CONTROL_FIELD_CONTENT_TYPE = 0x01
 
+const CONTROL_FRAME_LENGTH_MAX = 512
+
 type ControlFrame struct {
 	ControlType  uint32
 	ContentTypes [][]byte
@@ -73,6 +75,14 @@ func (c *ControlFrame) Decode(r io.Reader) (err error) {
 	err = binary.Read(r, binary.BigEndian, &cflen)
 	if err != nil {
 		return
+	}
+
+	if cflen > CONTROL_FRAME_LENGTH_MAX {
+		return ErrDecode
+	}
+
+	if cflen < 4 {
+		return ErrDecode
 	}
 
 	err = binary.Read(r, binary.BigEndian, &c.ControlType)
