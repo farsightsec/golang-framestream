@@ -1,3 +1,14 @@
+golang-framestream (0.3.0-1) debian-fsi; urgency=medium
+
+  * Limit maximum control frame length. Adopt C fstrm limit of 512 bytes,
+    not including type+length.
+  * Reader: remove log message from library function.
+  * Control.go: allow SetContentType(nil) for control frame.
+  * Control.go: match content type more efficiently.
+  * Add ReadFrame and WriteFrame functions.
+
+ -- Farsight Security, Inc. <software@farsightsecurity.com>  Thu, 12 Nov 2020 13:29:10 -0500
+
 golang-framestream (0.2.0-1) debian-fsi; urgency=medium
 
   * Add I/O timeout for Encoders and Decoders.
