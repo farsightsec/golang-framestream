@@ -2,8 +2,11 @@ Source: golang-framestream
 Section: net
 Priority: optional
 Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
-Build-Depends: debhelper (>= 9), dh-golang, golang-go
-Standards-Version: 3.9.8
+Build-Depends:
+ dh-golang,
+ golang-any,
+ debhelper-compat (= 13),
+Standards-Version: 4.5.1
 Homepage: https://github.com/farsightsec/golang-framestream
 Vcs-Git: https://github.com/farsightsec/golang-framestream.git
 Vcs-Browser: https://github.com/farsightsec/golang-framestream
