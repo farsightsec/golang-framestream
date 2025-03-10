@@ -12,14 +12,15 @@ A lightweight, binary-clean protocol that allows for the transport of arbitraril
 %global golicenses      LICENSE
 %global godocs          README.md
 
-Name:           %{goname}
+#Name:           %{goname}
+Name:           golang-framestream
 Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 
 License:        Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
-#BuildRequires:  mock-rpmautospec rpmautospec
+BuildRequires:  mock-rpmautospec rpmautospec
 
 %description
 %{common_description}
