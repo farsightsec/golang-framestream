@@ -22,12 +22,12 @@ URL:            %{gourl}
 Source0:        %{gosource}
 BuildRequires:  mock-rpmautospec rpmautospec
 
-%package -n golang-github-farsightsec-golang-framestream
-Summary:        Framestream protocol Golang implementation Binary Package
+#%package -n golang-github-farsightsec-golang-framestream
+#Summary:        Framestream protocol Golang implementation Binary Package
 
 %description
-This next line seems to fail when using the package macro
-#%{common_description}
+#This next line seems to fail when using the package macro
+%{common_description}
 
 %gopkg
 
