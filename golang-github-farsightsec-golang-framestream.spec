@@ -26,6 +26,7 @@ BuildRequires:  mock-rpmautospec rpmautospec
 Summary:        Framestream protocol Golang implementation
 
 %description
+This next line seems to fail when using the package macro
 %{common_description}
 
 %gopkg
