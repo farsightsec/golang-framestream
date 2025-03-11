@@ -23,11 +23,11 @@ Source0:        %{gosource}
 BuildRequires:  mock-rpmautospec rpmautospec
 
 %package -n golang-github-farsightsec-golang-framestream
-Summary:        Framestream protocol Golang implementation
+Summary:        Framestream protocol Golang implementation Binary Package
 
 %description
 This next line seems to fail when using the package macro
-%{common_description}
+#%{common_description}
 
 %gopkg
 
