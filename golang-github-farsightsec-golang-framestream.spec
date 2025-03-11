@@ -23,6 +23,7 @@ Source0:        %{gosource}
 BuildRequires:  mock-rpmautospec rpmautospec
 
 %package -n golang-github-farsightsec-golang-framestream
+Summary:        Framestream protocol Golang implementation
 
 %description
 %{common_description}
