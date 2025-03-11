@@ -13,7 +13,7 @@ A lightweight, binary-clean protocol that allows for the transport of arbitraril
 %global godocs          README.md
 
 #Name:           %{goname}
-Name:           golang-github-farsightsec-golang-framestream
+Name:           golang-framestream
 Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 
@@ -21,6 +21,8 @@ License:        Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
 BuildRequires:  mock-rpmautospec rpmautospec
+
+%package -n golang-github-farsightsec-golang-framestream
 
 %description
 %{common_description}
