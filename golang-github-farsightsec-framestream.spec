@@ -13,7 +13,7 @@ A lightweight, binary-clean protocol that allows for the transport of arbitraril
 %global godocs          README.md
 
 #Name:           %{goname}
-Name:           golang-github-farsightsec-framestream
+Name:           golang-github-farsightsec-framestream-devel
 Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 
@@ -32,7 +32,7 @@ BuildRequires:  mock-rpmautospec rpmautospec
 %gopkg
 
 %prep
-%goprep
+%goprep -e
 
 %generate_buildrequires
 %go_generate_buildrequires
