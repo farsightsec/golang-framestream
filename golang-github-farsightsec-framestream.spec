@@ -20,9 +20,6 @@ License:        Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
 
-%description
-%{common_description}
-
 %gopkg
 
 %prep
