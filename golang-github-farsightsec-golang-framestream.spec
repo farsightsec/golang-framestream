@@ -26,7 +26,7 @@ Source0:        %{gosource}
 %gopkg
 
 %prep
-%goprep
+%goprep -e
 
 %generate_buildrequires
 %go_generate_buildrequires
