@@ -19,8 +19,8 @@ Summary:        Framestream protocol Golang implementation
 License:        Apache-2.0
 URL:            %{gourl}
 #Source:         https://%{provider_prefix}/archive/%{commit}/%{name}-%{version}.tar.gz
-Source:         https://github.com/farsightsec/golang-framestream/archive/%{commit}/%{name}-%{version}.tar.gz
-#BuildRequires:  mock-rpmautospec rpmautospec
+#Source:         https://github.com/farsightsec/golang-framestream/archive/%{commit}/%{name}-%{version}.tar.gz
+Source:         https://github.com/farsightsec/golang-framestream/archive/broken-name.tar.gz
 
 %description
 %{common_description}
