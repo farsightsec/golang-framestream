@@ -31,7 +31,6 @@ BuildArch:  noarch
 
 %prep
 %setup -q
-%autopatch -p1
 
 %install
 install -d -p %{buildroot}/%{gopath}/src/%{import_path}/
