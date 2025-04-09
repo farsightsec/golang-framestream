@@ -44,4 +44,3 @@ Source:         https://github.com/farsightsec/golang-framestream/archive/broken
 %gopkgfiles
 
 %changelog
-%autochangelog
