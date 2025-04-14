@@ -13,7 +13,7 @@ A lightweight, binary-clean protocol that allows for the transport of arbitraril
 %global godocs          README.md
 
 Name:           golang-framestream
-Release:        %autorelease
+Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 
 License:        Apache-2.0
