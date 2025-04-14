@@ -30,10 +30,9 @@ BuildArch:  noarch
 %{common_description}
 
 %prep
-%goprep -e
+%setup -q
 
 %install
-find .
 for file in $(find . -iname "*.go" \! -iname "*_test.go" \! -iname "main.go" ) ; do
     echo "%%dir %%{gopath}/src/%%{goipath}/$(dirname $file)" >> devel.file-list
     install -d -p %{buildroot}/%{gopath}/src/%{goipath}/$(dirname $file)
