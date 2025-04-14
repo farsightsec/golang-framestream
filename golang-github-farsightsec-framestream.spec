@@ -12,7 +12,7 @@ A lightweight, binary-clean protocol that allows for the transport of arbitraril
 %global golicenses      LICENSE
 %global godocs          README.md
 
-Name:           %{goname}
+Name:           golang-framestream
 Release:        %autorelease
 Summary:        Framestream protocol Golang implementation
 
