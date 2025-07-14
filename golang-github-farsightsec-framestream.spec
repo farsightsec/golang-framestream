@@ -26,12 +26,12 @@ sort -u -o devel.file-list devel.file-list
 %global common_description %{expand:
 A lightweight, binary-clean protocol that allows for the transport of arbitrarily encoded data payload sequences with minimal framing overhead.}
 
-#Name:           golang-framestream
+Name:           golang-framestream
 Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 %gometa
-Name:           %{goname}
+#Name:           %{goname}
 License:        Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
