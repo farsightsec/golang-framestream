@@ -31,7 +31,6 @@ Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Framestream protocol Golang implementation
 %gometa
-#Name:           %{goname}
 License:        Apache-2.0
 URL:            %{gourl}
 Source0:        %{gosource}
