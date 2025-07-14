@@ -41,12 +41,6 @@ Source0:        %{gosource}
 %description
 %{common_description}
 
-%package -n %{goname}-devel
-Summary:	%{summary}
-BuildArch:  noarch
-%description -n %{goname}-devel
-%{common_description}
-
 %go_generate_buildrequires
 
 %gopkg
